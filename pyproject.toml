@@ -10,11 +10,14 @@ packages = [{include = "my_trening"}]
 python = "^3.10"
 fastapi = "^0.95.0"
 uvicorn = "^0.21.1"
-psycopg2-binary = "^2.9.5"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 sqlalchemy = "^2.0.8"
 python-dotenv = "^1.0.0"
+fastapi-jwt-auth = "^0.5.0"
+alembic = "^1.10.2"
+asyncpg = "^0.27.0"
+black = "^23.3.0"
 
 
 [build-system]
