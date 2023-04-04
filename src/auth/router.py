@@ -36,7 +36,10 @@ def refresh_access_token(authorize: AuthJWT = Depends()):
 
 @users_router.post("/", response_model=UserSchema, status_code=201)
 async def create_user(user: UserSchemaCreate, db: AsyncSession = Depends(get_db)):
-    return await create(db, user)
+    new_user = await create(db, user)
+    if not new_user:
+        raise HTTPException(status_code=400, detail='User already exists')
+    return new_user
 
 
 @users_router.get("/", response_model=list[UserSchema])
@@ -49,19 +52,25 @@ async def get_all_users(
     return await get_all(db, limit)
 
 
-@users_router.delete("/", status_code=204)
-async def delete_user(
-    user: UserSchemaBase,
-    db: AsyncSession = Depends(get_db),
-    authorize: AuthJWT = Depends(),
-):
-    authorize.jwt_required()
-    return await delete(db, username=user.username)
-
-
 @users_router.get("/{username}/", response_model=UserSchema)
 async def get_user(
     username: str, db: AsyncSession = Depends(get_db), authorize: AuthJWT = Depends()
 ):
     authorize.jwt_required()
-    return await get_one(db, username=username)
+    user = await get_one(db, username=username)
+    if not user:
+        raise HTTPException(status_code=400, detail='User not found')
+    return user
+
+
+@users_router.delete("/{username}", status_code=204)
+async def delete_user(
+    username: str,
+    db: AsyncSession = Depends(get_db),
+    authorize: AuthJWT = Depends(),
+):
+    authorize.jwt_required()
+    existed_user = await get_one(db, username=username)
+    if not existed_user:
+        raise HTTPException(status_code=400, detail='User not found')
+    return await delete(db, existed_user)
