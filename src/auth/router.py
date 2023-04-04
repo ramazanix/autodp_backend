@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from .schemas import UserSchemaCreate, UserSchema, UserSchemaBase
+from .schemas import UserSchemaCreate, UserSchema
 from .services import create, get_all, get_with_paswd, delete
 from .services import get as get_one
 from fastapi_jwt_auth import AuthJWT
@@ -38,7 +38,7 @@ def refresh_access_token(authorize: AuthJWT = Depends()):
 async def create_user(user: UserSchemaCreate, db: AsyncSession = Depends(get_db)):
     new_user = await create(db, user)
     if not new_user:
-        raise HTTPException(status_code=400, detail='User already exists')
+        raise HTTPException(status_code=400, detail="User already exists")
     return new_user
 
 
@@ -59,7 +59,7 @@ async def get_user(
     authorize.jwt_required()
     user = await get_one(db, username=username)
     if not user:
-        raise HTTPException(status_code=400, detail='User not found')
+        raise HTTPException(status_code=400, detail="User not found")
     return user
 
 
@@ -72,5 +72,5 @@ async def delete_user(
     authorize.jwt_required()
     existed_user = await get_one(db, username=username)
     if not existed_user:
-        raise HTTPException(status_code=400, detail='User not found')
+        raise HTTPException(status_code=400, detail="User not found")
     return await delete(db, existed_user)

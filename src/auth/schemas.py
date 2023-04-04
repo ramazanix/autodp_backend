@@ -16,9 +16,9 @@ class UserSchema(BaseModel):
     created_at: str
     updated_at: str
 
-    @validator('created_at', 'updated_at', pre=True)
+    @validator("created_at", "updated_at", pre=True)
     def parse_dates(cls, value):
-        return datetime.strftime(value, '%X %d.%m.%Y %Z')
+        return datetime.strftime(value, "%X %d.%m.%Y %Z")
 
     class Config:
         orm_mode = True
