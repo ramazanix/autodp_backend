@@ -10,6 +10,11 @@ class UserSchemaCreate(UserSchemaBase):
     password: str
 
 
+class UserSchemaUpdate(UserSchemaBase):
+    username: str
+    password: str | None = None
+
+
 class UserSchema(BaseModel):
     id: UUID4
     username: str

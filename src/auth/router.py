@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from .schemas import UserSchemaCreate, UserSchema
-from .services import create, get_all, get_with_paswd, delete
+from .schemas import UserSchemaCreate, UserSchema, UserSchemaUpdate
+from .services import create, get_all, get_with_paswd, delete, update
 from .services import get as get_one
 from fastapi_jwt_auth import AuthJWT
 from ..db import get_db
 
-users_router = APIRouter(prefix="/users", tags=["User"])
+users_router = APIRouter(prefix="/users", tags=["Users"])
 auth_router = APIRouter(prefix="/auth", tags=["Authenticate"])
 
 
@@ -61,6 +61,20 @@ async def get_user(
     if not user:
         raise HTTPException(status_code=400, detail="User not found")
     return user
+
+
+@users_router.patch("/{username}/", response_model=UserSchema)
+async def update_user(
+    username: str,
+    payload: UserSchemaUpdate,
+    db: AsyncSession = Depends(get_db),
+    authorize: AuthJWT = Depends(),
+):
+    authorize.jwt_required()
+    existed_user = await get_one(db, username=username)
+    if not existed_user:
+        raise HTTPException(status_code=400, detail="User not found")
+    return await update(db, payload, existed_user)
 
 
 @users_router.delete("/{username}", status_code=204)
