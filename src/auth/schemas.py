@@ -1,4 +1,4 @@
-from pydantic import BaseModel, UUID4
+from pydantic import BaseModel, UUID4, validator
 from datetime import datetime
 
 
@@ -13,7 +13,12 @@ class UserSchemaCreate(UserSchemaBase):
 class UserSchema(BaseModel):
     id: UUID4
     username: str
-    join_date: datetime
+    created_at: str
+    updated_at: str
+
+    @validator('created_at', 'updated_at', pre=True)
+    def parse_dates(cls, value):
+        return datetime.strftime(value, '%X %d.%m.%Y %Z')
 
     class Config:
         orm_mode = True
