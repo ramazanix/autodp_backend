@@ -1,8 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.schemas import UserSchema
 from src.auth.services import get
-from pydantic import BaseModel
-from src.config import config as app_config
+from src.config import settings
 from fastapi import APIRouter, Request, Depends
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
@@ -13,13 +12,9 @@ from src.db import get_db
 main_router = APIRouter(prefix="")
 
 
-class Settings(BaseModel):
-    authjwt_secret_key: str = app_config.SECRET_KEY
-
-
 @AuthJWT.load_config
 def get_config():
-    return Settings()
+    return settings
 
 
 def auth_jwt_exception_handler(request: Request, exc: AuthJWTException):

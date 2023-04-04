@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from src.config import config as app_config
+from src.config import settings
 from src.db import session_manager
 
 
@@ -8,7 +8,7 @@ def init_app(init_db=True):
     lifespan = None
 
     if init_db:
-        session_manager.init(app_config.DB_URL)
+        session_manager.init(settings.DB_URL)
 
         @asynccontextmanager
         async def lifespan(app: FastAPI):
