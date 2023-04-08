@@ -3,7 +3,7 @@ from datetime import datetime
 
 
 class UserSchemaBase(BaseModel):
-    username: str = Field(min_length=3, max_length=20)
+    username: str = Field(min_length=2, max_length=20)
 
 
 class UserSchemaCreate(UserSchemaBase):
