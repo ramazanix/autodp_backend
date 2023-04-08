@@ -18,6 +18,12 @@ fastapi-jwt-auth = "^0.5.0"
 alembic = "^1.10.2"
 asyncpg = "^0.27.0"
 black = "^23.3.0"
+pytest = "^7.3.0"
+pytest-postgresql = "^4.1.1"
+httpx = "^0.23.3"
+pytest-asyncio = "^0.21.0"
+pytest-schema = "^0.1.1"
+psycopg = "^3.1.8"
 
 
 [build-system]

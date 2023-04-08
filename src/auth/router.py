@@ -45,10 +45,8 @@ async def create_user(user: UserSchemaCreate, db: AsyncSession = Depends(get_db)
 @users_router.get("/", response_model=list[UserSchema])
 async def get_all_users(
     db: AsyncSession = Depends(get_db),
-    authorize: AuthJWT = Depends(),
     limit: int | None = None,
 ):
-    authorize.jwt_required()
     return await get_all(db, limit)
 
 
@@ -77,7 +75,7 @@ async def update_user(
     return await update(db, payload, existed_user)
 
 
-@users_router.delete("/{username}", status_code=204)
+@users_router.delete("/{username}/", status_code=204)
 async def delete_user(
     username: str,
     db: AsyncSession = Depends(get_db),
