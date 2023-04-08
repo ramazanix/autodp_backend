@@ -45,8 +45,10 @@ async def create_user(user: UserSchemaCreate, db: AsyncSession = Depends(get_db)
 @users_router.get("/", response_model=list[UserSchema])
 async def get_all_users(
     db: AsyncSession = Depends(get_db),
+    authorize: AuthJWT = Depends(),
     limit: int | None = None,
 ):
+    authorize.jwt_required()
     return await get_all(db, limit)
 
 
