@@ -1,13 +1,13 @@
-from pydantic import BaseModel, UUID4, validator
+from pydantic import BaseModel, UUID4, validator, Field
 from datetime import datetime
 
 
 class UserSchemaBase(BaseModel):
-    username: str
+    username: str = Field(min_length=3, max_length=20)
 
 
 class UserSchemaCreate(UserSchemaBase):
-    password: str
+    password: str = Field(min_length=8, max_length=32)
 
 
 class UserSchemaUpdate(UserSchemaBase):
