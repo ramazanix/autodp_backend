@@ -19,21 +19,21 @@ def app():
 
 @pytest_asyncio.fixture
 async def client(app):
-    async with AsyncClient(app=app, base_url='http://test') as ac:
+    async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
 
 
-test_db = factories.postgresql_proc(dbname='test_db', port=None)
+test_db = factories.postgresql_proc(dbname="test_db", port=None)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def event_loop():
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
 
 
-@pytest_asyncio.fixture(scope='session', autouse=True)
+@pytest_asyncio.fixture(scope="session", autouse=True)
 async def connection_test(test_db, event_loop):
     pg_host = test_db.host
     pg_port = test_db.port
@@ -41,8 +41,10 @@ async def connection_test(test_db, event_loop):
     pg_db = test_db.dbname
     pg_password = test_db.password
 
-    with DatabaseJanitor(pg_user, pg_host, pg_port, pg_db, test_db.version, pg_password):
-        test_db_url = f'postgresql+asyncpg://{pg_user}:@{pg_host}:{pg_port}/{pg_db}'
+    with DatabaseJanitor(
+        pg_user, pg_host, pg_port, pg_db, test_db.version, pg_password
+    ):
+        test_db_url = f"postgresql+asyncpg://{pg_user}:@{pg_host}:{pg_port}/{pg_db}"
         session_manager.init(test_db_url)
         yield
         await session_manager.close()
