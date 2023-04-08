@@ -75,7 +75,7 @@ async def update_user(
     return await update(db, payload, existed_user)
 
 
-@users_router.delete("/{username}", status_code=204)
+@users_router.delete("/{username}/", status_code=204)
 async def delete_user(
     username: str,
     db: AsyncSession = Depends(get_db),
