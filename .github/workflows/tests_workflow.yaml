@@ -1,4 +1,4 @@
-name: test
+name: Tests
 
 on:
   pull_request:
@@ -47,4 +47,5 @@ jobs:
       - name: Run tests
         run: |
           source .venv/bin/activate
+          cat .env.example >> .env
           pytest tests/
