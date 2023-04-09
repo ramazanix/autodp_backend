@@ -32,6 +32,7 @@ async def test_delete_user_authorized(client: AsyncClient):
     assert response.json().get("username") == "Alex"
 
     response = await client.post("/auth/login/", json=user_data)
+    assert response.status_code == 200
     access_token = response.json().get("access_token")
     headers = {"Authorization": f"Bearer {access_token}"}
 
@@ -51,6 +52,7 @@ async def test_delete_not_existed_user(client: AsyncClient):
     assert response.json().get("username") == "Tom"
 
     response = await client.post("/auth/login/", json=user_data)
+    assert response.status_code == 200
     access_token = response.json().get("access_token")
     headers = {"Authorization": f"Bearer {access_token}"}
 
