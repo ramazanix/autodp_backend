@@ -41,9 +41,9 @@ async def test_delete_user_authorized(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_delete_not_existed_user(client: AsyncClient):
+async def test_delete_another_user(client: AsyncClient):
     """
-    Trying to delete not existed user
+    Trying to delete another user
     """
     user_data = {"username": "Tom", "password": "tom_password"}
     response = await client.post("/users/", json=user_data)
@@ -57,5 +57,4 @@ async def test_delete_not_existed_user(client: AsyncClient):
     headers = {"Authorization": f"Bearer {access_token}"}
 
     response = await client.delete("/users/Alex/", headers=headers)
-    assert response.status_code == 400
-    assert response.json().get("detail") == "User not found"
+    assert response.status_code == 405
