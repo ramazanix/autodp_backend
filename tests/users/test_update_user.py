@@ -69,9 +69,10 @@ async def test_update_user_blank_body(client: AsyncClient):
     access_token = response.json().get("access_token")
     headers = {"Authorization": f"Bearer {access_token}"}
 
-    response = await client.patch("/users/Alex/", json={}, headers=headers)
+    response = await client.patch("/users/Joe/", json={}, headers=headers)
 
     assert response.status_code == 400
+    assert response.json().get("detail") == "Bad Request"
 
 
 @pytest.mark.asyncio
@@ -160,3 +161,40 @@ async def test_update_user_too_long_password(client: AsyncClient):
         "/users/Alex/", json={"password": "A" * 33}, headers=headers
     )
     assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_update_user_invalid_body(client: AsyncClient):
+    """
+    Trying to update user with invalid body
+    """
+    user_data = {"username": "username", "password": "password"}
+    response = await client.post("/users/", json=user_data)
+    assert response.status_code == 201
+    assert exact_schema(user) == response.json()
+    assert response.json().get("username") == "username"
+
+    response = await client.post("/auth/login/", json=user_data)
+    assert response.status_code == 200
+    access_token = response.json().get("access_token")
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    response = await client.patch("/users/username/", json={"a": "b"}, headers=headers)
+    assert response.status_code == 400
+    assert response.json().get("detail") == "Bad Request"
+
+    response = await client.patch(
+        "/users/username/", json={"username": "", "password": ""}, headers=headers
+    )
+    assert response.status_code == 422
+
+    response = await client.patch(
+        "/users/username/",
+        json={"username": "username", "password": ""},
+        headers=headers,
+    )
+    assert response.status_code == 422
+
+    # Uncomment when refactor auth system
+    # response = await client.patch('/users/username/', json={'username': 'username', 'password': 'password'}, headers=headers)
+    # assert response.status_code == 422
