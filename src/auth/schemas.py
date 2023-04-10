@@ -10,9 +10,9 @@ class UserSchemaCreate(UserSchemaBase):
     password: str = Field(min_length=8, max_length=32)
 
 
-class UserSchemaUpdate(UserSchemaBase):
-    username: str
-    password: str | None = None
+class UserSchemaUpdate(BaseModel):
+    username: str | None = Field(min_length=2, max_length=20)
+    password: str | None = Field(min_length=8, max_length=32)
 
 
 class UserSchema(BaseModel):
