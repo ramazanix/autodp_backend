@@ -69,9 +69,16 @@ async def update_user(
     authorize: AuthJWT = Depends(),
 ):
     authorize.jwt_required()
+    if not authorize.get_jwt_subject() == username:
+        raise HTTPException(status_code=405)
+
+    if not any(payload.dict().values()):
+        raise HTTPException(status_code=400)
     existed_user = await get_one(db, username=username)
+
     if not existed_user:
         raise HTTPException(status_code=400, detail="User not found")
+
     return await update(db, payload, existed_user)
 
 
@@ -82,6 +89,9 @@ async def delete_user(
     authorize: AuthJWT = Depends(),
 ):
     authorize.jwt_required()
+    if not authorize.get_jwt_subject() == username:
+        raise HTTPException(status_code=405)
+
     existed_user = await get_one(db, username=username)
     if not existed_user:
         raise HTTPException(status_code=400, detail="User not found")
