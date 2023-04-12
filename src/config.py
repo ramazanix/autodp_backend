@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     DB_PORT: int
     DB_URL: str
     AUTHJWT_SECRET_KEY: str
+    AUTHJWT_TOKEN_LOCATION: set = {"cookies"}
+    AUTHJWT_COOKIE_SECURE: bool
+    AUTHJWT_COOKIE_CSRF_PROTECT: bool
 
     class Config:
         env_file = "./.env"
