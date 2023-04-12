@@ -12,14 +12,12 @@ async def test_create_user(client: AsyncClient):
     """
     Trying to create user
     """
-    response = await client.post(
-        "/users/", json=user_data
-    )
+    response = await client.post("/users/", json=user_data)
     assert response.status_code == 201
 
     assert exact_schema(user) == response.json()
 
-    assert response.json().get("username") == user_data['username']
+    assert response.json().get("username") == user_data["username"]
 
 
 @pytest.mark.asyncio
@@ -27,12 +25,10 @@ async def test_create_couple_users(client: AsyncClient):
     """
     Trying to create a couple of users
     """
-    response = await client.post(
-        "/users/", json=user_data
-    )
+    response = await client.post("/users/", json=user_data)
     assert response.status_code == 201
     assert exact_schema(user) == response.json()
-    assert response.json().get("username") == user_data['username']
+    assert response.json().get("username") == user_data["username"]
 
     response = await client.post(
         "/users/", json={"username": "Tom", "password": "tom_password"}
@@ -146,15 +142,11 @@ async def test_create_existing_user(client: AsyncClient):
     """
     Trying to create existing user
     """
-    response = await client.post(
-        "/users/", json=user_data
-    )
+    response = await client.post("/users/", json=user_data)
     assert response.status_code == 201
     assert exact_schema(user) == response.json()
-    assert response.json().get("username") == user_data['username']
+    assert response.json().get("username") == user_data["username"]
 
-    response = await client.post(
-        "/users/", json=user_data
-    )
+    response = await client.post("/users/", json=user_data)
     assert response.status_code == 400
     assert response.json().get("detail") == "User already exists"
