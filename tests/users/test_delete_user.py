@@ -20,12 +20,10 @@ async def test_delete_user_unauthorized(client: AsyncClient):
     """
     Trying to delete user without auth
     """
-    response = await client.post(
-        "/users/", json=user_data
-    )
+    response = await client.post("/users/", json=user_data)
     assert response.status_code == 201
     assert exact_schema(user) == response.json()
-    assert response.json().get("username") == user_data['username']
+    assert response.json().get("username") == user_data["username"]
 
     response = await client.delete(f"/users/{user_data['username']}/")
     assert response.status_code == 401
@@ -40,7 +38,7 @@ async def test_delete_user_authorized(client: AsyncClient):
     response = await client.post("/users/", json=user_data)
     assert response.status_code == 201
     assert exact_schema(user) == response.json()
-    assert response.json().get("username") == user_data['username']
+    assert response.json().get("username") == user_data["username"]
 
     response = await client.post("/auth/login/", json=user_data)
     assert response.status_code == 200
@@ -48,7 +46,7 @@ async def test_delete_user_authorized(client: AsyncClient):
     assert list(response.cookies.keys()) == correct_cookies
 
     cookies = response.cookies
-    headers = {'X-CSRF-Token': cookies.get('csrf_access_token')}
+    headers = {"X-CSRF-Token": cookies.get("csrf_access_token")}
 
     response = await client.delete(f"/users/{user_data['username']}/", headers=headers)
     assert response.status_code == 204
@@ -63,7 +61,7 @@ async def test_delete_user_unauthorized(client: AsyncClient):
     response = await client.post("/users/", json=user_data)
     assert response.status_code == 201
     assert exact_schema(user) == response.json()
-    assert response.json().get("username") == user_data['username']
+    assert response.json().get("username") == user_data["username"]
 
     response = await client.delete(f"/users/{user_data['username']}/")
     assert response.status_code == 401
@@ -77,7 +75,7 @@ async def test_delete_another_user(client: AsyncClient):
     response = await client.post("/users/", json=user_data)
     assert response.status_code == 201
     assert exact_schema(user) == response.json()
-    assert response.json().get("username") == user_data['username']
+    assert response.json().get("username") == user_data["username"]
 
     response = await client.post("/auth/login/", json=user_data)
     assert response.status_code == 200
@@ -85,7 +83,7 @@ async def test_delete_another_user(client: AsyncClient):
     assert list(response.cookies.keys()) == correct_cookies
 
     cookies = response.cookies
-    headers = {'X-CSRF-Token': cookies.get('csrf_access_token')}
+    headers = {"X-CSRF-Token": cookies.get("csrf_access_token")}
 
     response = await client.delete("/users/another_user/", headers=headers)
     assert response.status_code == 405

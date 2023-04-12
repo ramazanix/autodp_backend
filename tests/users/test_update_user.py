@@ -20,14 +20,14 @@ async def test_update_user_unauthorized(client: AsyncClient):
     """
     Trying to update user without auth
     """
-    response = await client.post(
-        "/users/", json=user_data
-    )
+    response = await client.post("/users/", json=user_data)
     assert response.status_code == 201
     assert exact_schema(user) == response.json()
-    assert response.json().get("username") == user_data['username']
+    assert response.json().get("username") == user_data["username"]
 
-    response = await client.patch(f"/users/{user_data['username']}/", json={"username": "not_Alex"})
+    response = await client.patch(
+        f"/users/{user_data['username']}/", json={"username": "not_Alex"}
+    )
     assert response.status_code == 401
 
 
@@ -39,7 +39,7 @@ async def test_update_user_authorized(client: AsyncClient):
     response = await client.post("/users/", json=user_data)
     assert response.status_code == 201
     assert exact_schema(user) == response.json()
-    assert response.json().get("username") == user_data['username']
+    assert response.json().get("username") == user_data["username"]
 
     response = await client.post("/auth/login/", json=user_data)
     assert response.status_code == 200
@@ -47,7 +47,7 @@ async def test_update_user_authorized(client: AsyncClient):
     assert list(response.cookies.keys()) == correct_cookies
 
     cookies = response.cookies
-    headers = {'X-CSRF-Token': cookies.get('csrf_access_token')}
+    headers = {"X-CSRF-Token": cookies.get("csrf_access_token")}
 
     response = await client.patch(
         "/users/Alex/", json={"username": "not_Alex"}, headers=headers
@@ -74,7 +74,7 @@ async def test_update_user_blank_body(client: AsyncClient):
     response = await client.post("/users/", json=user_data)
     assert response.status_code == 201
     assert exact_schema(user) == response.json()
-    assert response.json().get("username") == user_data['username']
+    assert response.json().get("username") == user_data["username"]
 
     response = await client.post("/auth/login/", json=user_data)
     assert response.status_code == 200
@@ -82,9 +82,11 @@ async def test_update_user_blank_body(client: AsyncClient):
     assert list(response.cookies.keys()) == correct_cookies
 
     cookies = response.cookies
-    headers = {'X-CSRF-Token': cookies.get('csrf_access_token')}
+    headers = {"X-CSRF-Token": cookies.get("csrf_access_token")}
 
-    response = await client.patch(f"/users/{user_data['username']}/", json={}, headers=headers)
+    response = await client.patch(
+        f"/users/{user_data['username']}/", json={}, headers=headers
+    )
 
     assert response.status_code == 400
     assert exact_schema(error) == response.json()
@@ -99,7 +101,7 @@ async def test_update_user_too_small_username(client: AsyncClient):
     response = await client.post("/users/", json=user_data)
     assert response.status_code == 201
     assert exact_schema(user) == response.json()
-    assert response.json().get("username") == user_data['username']
+    assert response.json().get("username") == user_data["username"]
 
     response = await client.post("/auth/login/", json=user_data)
     assert response.status_code == 200
@@ -107,7 +109,7 @@ async def test_update_user_too_small_username(client: AsyncClient):
     assert list(response.cookies.keys()) == correct_cookies
 
     cookies = response.cookies
-    headers = {'X-CSRF-Token': cookies.get('csrf_access_token')}
+    headers = {"X-CSRF-Token": cookies.get("csrf_access_token")}
 
     response = await client.patch(
         "/users/Joe/", json={"username": "J"}, headers=headers
@@ -123,7 +125,7 @@ async def test_update_user_too_long_username(client: AsyncClient):
     response = await client.post("/users/", json=user_data)
     assert response.status_code == 201
     assert exact_schema(user) == response.json()
-    assert response.json().get("username") == user_data['username']
+    assert response.json().get("username") == user_data["username"]
 
     response = await client.post("/auth/login/", json=user_data)
     assert response.status_code == 200
@@ -131,7 +133,7 @@ async def test_update_user_too_long_username(client: AsyncClient):
     assert list(response.cookies.keys()) == correct_cookies
 
     cookies = response.cookies
-    headers = {'X-CSRF-Token': cookies.get('csrf_access_token')}
+    headers = {"X-CSRF-Token": cookies.get("csrf_access_token")}
 
     response = await client.patch(
         "/users/Alex/", json={"username": "A" * 21}, headers=headers
@@ -147,7 +149,7 @@ async def test_update_user_too_small_password(client: AsyncClient):
     response = await client.post("/users/", json=user_data)
     assert response.status_code == 201
     assert exact_schema(user) == response.json()
-    assert response.json().get("username") == user_data['username']
+    assert response.json().get("username") == user_data["username"]
 
     response = await client.post("/auth/login/", json=user_data)
     assert response.status_code == 200
@@ -155,7 +157,7 @@ async def test_update_user_too_small_password(client: AsyncClient):
     assert list(response.cookies.keys()) == correct_cookies
 
     cookies = response.cookies
-    headers = {'X-CSRF-Token': cookies.get('csrf_access_token')}
+    headers = {"X-CSRF-Token": cookies.get("csrf_access_token")}
 
     response = await client.patch(
         "/users/Alex/", json={"password": "A" * 33}, headers=headers
@@ -171,7 +173,7 @@ async def test_update_user_too_long_password(client: AsyncClient):
     response = await client.post("/users/", json=user_data)
     assert response.status_code == 201
     assert exact_schema(user) == response.json()
-    assert response.json().get("username") == user_data['username']
+    assert response.json().get("username") == user_data["username"]
 
     response = await client.post("/auth/login/", json=user_data)
     assert response.status_code == 200
@@ -179,7 +181,7 @@ async def test_update_user_too_long_password(client: AsyncClient):
     assert list(response.cookies.keys()) == correct_cookies
 
     cookies = response.cookies
-    headers = {'X-CSRF-Token': cookies.get('csrf_access_token')}
+    headers = {"X-CSRF-Token": cookies.get("csrf_access_token")}
 
     response = await client.patch(
         "/users/Alex/", json={"password": "A" * 33}, headers=headers
@@ -204,7 +206,7 @@ async def test_update_user_invalid_body(client: AsyncClient):
     assert list(response.cookies.keys()) == correct_cookies
 
     cookies = response.cookies
-    headers = {'X-CSRF-Token': cookies.get('csrf_access_token')}
+    headers = {"X-CSRF-Token": cookies.get("csrf_access_token")}
 
     response = await client.patch("/users/username/", json={"a": "b"}, headers=headers)
     assert response.status_code == 400
