@@ -49,6 +49,7 @@ jobs:
 
       - name: Run tests
         run: |
+          ls -la
           source .venv/bin/activate
           cat .env.example >> .env
           pytest tests/
