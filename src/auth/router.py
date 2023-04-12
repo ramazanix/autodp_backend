@@ -22,7 +22,9 @@ async def login(
 
     access_token = authorize.create_access_token(subject=user.username)
     refresh_token = authorize.create_refresh_token(subject=user.username)
-    return {"access_token": access_token, "refresh_token": refresh_token}
+    authorize.set_access_cookies(access_token)
+    authorize.set_refresh_cookies(refresh_token)
+    return {"success": "Successfully login"}
 
 
 @auth_router.post("/refresh/")
@@ -31,7 +33,15 @@ def refresh_access_token(authorize: AuthJWT = Depends()):
 
     current_user = authorize.get_jwt_subject()
     new_access_token = authorize.create_access_token(subject=current_user)
-    return {"access_token": new_access_token}
+    authorize.set_access_cookies(new_access_token)
+    return {"success": "The token has been refreshed"}
+
+
+@auth_router.delete("/logout/")
+async def logout(authorize: AuthJWT = Depends()):
+    authorize.jwt_required()
+    authorize.unset_jwt_cookies()
+    return {"success": "Successfully logout"}
 
 
 @users_router.post("/", response_model=UserSchema, status_code=201)
@@ -72,12 +82,18 @@ async def update_user(
     if not authorize.get_jwt_subject() == username:
         raise HTTPException(status_code=405)
 
-    if not any(payload.dict().values()):
+    new_user_data: dict = payload.dict()
+    if not any(new_user_data.values()):
         raise HTTPException(status_code=400)
+
     existed_user = await get_one(db, username=username)
 
     if not existed_user:
         raise HTTPException(status_code=400, detail="User not found")
+
+    if new_username := new_user_data.get("username"):
+        new_access_token = authorize.create_access_token(subject=new_username)
+        authorize.set_access_cookies(new_access_token)
 
     return await update(db, payload, existed_user)
 
@@ -95,4 +111,6 @@ async def delete_user(
     existed_user = await get_one(db, username=username)
     if not existed_user:
         raise HTTPException(status_code=400, detail="User not found")
+
+    authorize.unset_jwt_cookies()
     return await delete(db, existed_user)
