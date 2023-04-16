@@ -5,6 +5,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy import select
 from sqlalchemy import update as sa_update
 from .schemas import UserSchemaCreate, UserSchemaUpdate
+from collections.abc import Sequence
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -28,9 +29,7 @@ async def create(db: AsyncSession, user: UserSchemaCreate) -> User | None:
     return db_user
 
 
-async def update(
-    db: AsyncSession, payload: UserSchemaUpdate, user: User
-) -> User | None:
+async def update(db: AsyncSession, payload: UserSchemaUpdate, user: User) -> User:
     update_data = payload.dict(exclude_none=True, exclude_unset=True)
     if update_data.get("password"):
         hashed_passwd = get_password_hash(update_data.get("password"))
@@ -67,7 +66,7 @@ async def get(db: AsyncSession, username: str) -> User | None:
     ).scalar_one_or_none()
 
 
-async def get_all(db: AsyncSession, bound: int | None = None):
+async def get_all(db: AsyncSession, bound: int | None = None) -> Sequence[User]:
     return (
         (await db.execute(select(User).limit(bound).order_by(User.created_at)))
         .scalars()
