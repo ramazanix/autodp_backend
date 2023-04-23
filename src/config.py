@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     AUTHJWT_TOKEN_LOCATION: set = {"cookies"}
     AUTHJWT_COOKIE_SECURE: bool
     AUTHJWT_COOKIE_CSRF_PROTECT: bool
+    AUTHJWT_DENYLIST_ENABLED: bool
+    AUTHJWT_COOKIE_MAX_AGE: int
 
     class Config:
         env_file = "./.env"

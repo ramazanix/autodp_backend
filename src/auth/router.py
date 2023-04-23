@@ -5,6 +5,9 @@ from .services import create, get_all, get_with_paswd, delete, update
 from .services import get as get_one
 from fastapi_jwt_auth import AuthJWT
 from ..db import get_db
+from ..main import redis_conn
+from ..config import settings
+
 
 users_router = APIRouter(prefix="/users", tags=["Users"])
 auth_router = APIRouter(prefix="/auth", tags=["Authenticate"])
@@ -30,16 +33,19 @@ async def login(
 @auth_router.post("/refresh/")
 def refresh_access_token(authorize: AuthJWT = Depends()):
     authorize.jwt_refresh_token_required()
-
+    jti = authorize.get_raw_jwt()["jti"]
     current_user = authorize.get_jwt_subject()
     new_access_token = authorize.create_access_token(subject=current_user)
     authorize.set_access_cookies(new_access_token)
+    redis_conn.setex(jti, settings.AUTHJWT_COOKIE_MAX_AGE, "true")
     return {"success": "The token has been refreshed"}
 
 
 @auth_router.delete("/logout/")
 async def logout(authorize: AuthJWT = Depends()):
     authorize.jwt_required()
+    jti = authorize.get_raw_jwt()["jti"]
+    redis_conn.setex(jti, settings.AUTHJWT_COOKIE_MAX_AGE, "true")
     authorize.unset_jwt_cookies()
     return {"success": "Successfully logout"}
 
@@ -111,6 +117,7 @@ async def delete_user(
     existed_user = await get_one(db, username=username)
     if not existed_user:
         raise HTTPException(status_code=400, detail="User not found")
-
+    jti = authorize.get_raw_jwt()["jti"]
+    redis_conn.setex(jti, settings.AUTHJWT_COOKIE_MAX_AGE, "true")
     authorize.unset_jwt_cookies()
     return await delete(db, existed_user)
