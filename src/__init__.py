@@ -16,16 +16,28 @@ def init_app(init_db=True):
             if session_manager._engine is not None:
                 await session_manager.close()
 
-    server = FastAPI(title="My FastAPI Server", lifespan=lifespan)
+    server = FastAPI(title="AutoDP", lifespan=lifespan)
 
-    from .main import main_router, auth_jwt_exception_handler
-    from .auth.router import auth_router, users_router
+    from .routers.auth import auth_router
+    from .routers.user import users_router
+    from .handlers import auth_jwt_exception_handler
     from fastapi_jwt_auth.exceptions import AuthJWTException
+    from fastapi.middleware.cors import CORSMiddleware
 
-    server.include_router(main_router)
+    origins = [
+        "http://localhost:3000",
+    ]
+
     server.include_router(auth_router)
     server.include_router(users_router)
     server.add_exception_handler(AuthJWTException, auth_jwt_exception_handler)
+    server.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     return server
 
