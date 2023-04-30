@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     AUTHJWT_COOKIE_CSRF_PROTECT: bool
     AUTHJWT_DENYLIST_ENABLED: bool
     AUTHJWT_COOKIE_MAX_AGE: int
+    REDIS_HOST: str
+    REDIS_PASSWORD: str
 
     class Config:
         env_file = "./.env"
