@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..schemas.user import UserSchemaCreate, UserSchema, UserSchemaUpdate
-from ..services.user import create, update, delete, get_all, get_by_username
+from ..services.user import create, update, delete, get_all, get_by_username, get_by_id
 from fastapi_jwt_auth import AuthJWT
 from ..db import get_db
 from .auth import redis_conn
@@ -16,8 +16,8 @@ async def get_current_user(
     db: AsyncSession = Depends(get_db), authorize: AuthJWT = Depends()
 ):
     authorize.jwt_required()
-    current_user = authorize.get_jwt_subject()
-    db_user = await get_by_username(db, current_user)
+    user_claims = authorize.get_raw_jwt()["user_claims"]
+    db_user = await get_by_id(db, user_claims)
     return db_user
 
 
@@ -32,7 +32,7 @@ async def create_user(user: UserSchemaCreate, db: AsyncSession = Depends(get_db)
 @users_router.get("", response_model=list[UserSchema])
 async def get_all_users(
     db: AsyncSession = Depends(get_db),
-    limit: int | None = None,
+    limit: int | None = Query(None, gt=0),
 ):
     return await get_all(db, limit)
 
@@ -56,21 +56,18 @@ async def update_user(
     authorize: AuthJWT = Depends(),
 ):
     authorize.jwt_required()
-    if not authorize.get_jwt_subject() == username:
-        raise HTTPException(status_code=405)
-
-    new_user_data: dict = payload.dict()
-    if not any(new_user_data.values()):
-        raise HTTPException(status_code=400)
-
+    current_user_id = authorize.get_raw_jwt()["user_claims"]["id"]
     existed_user = await get_by_username(db, username=username)
 
     if not existed_user:
         raise HTTPException(status_code=400, detail="User not found")
 
-    if new_username := new_user_data.get("username"):
-        new_access_token = authorize.create_access_token(subject=new_username)
-        authorize.set_access_cookies(new_access_token)
+    if not str(existed_user.id) == current_user_id:
+        raise HTTPException(status_code=405)
+
+    new_user_data: dict = payload.dict()
+    if not any(new_user_data.values()):
+        raise HTTPException(status_code=400)
 
     return await update(db, payload, existed_user)
 
@@ -82,12 +79,15 @@ async def delete_user(
     authorize: AuthJWT = Depends(),
 ):
     authorize.jwt_required()
-    if not authorize.get_jwt_subject() == username:
-        raise HTTPException(status_code=405)
-
+    current_user_id = authorize.get_raw_jwt()["user_claims"]["id"]
     existed_user = await get_by_username(db, username=username)
+
     if not existed_user:
         raise HTTPException(status_code=400, detail="User not found")
+
+    if not str(existed_user.id) == current_user_id:
+        raise HTTPException(status_code=405)
+
     jti = authorize.get_raw_jwt()["jti"]
     redis_conn.setex(jti, settings.AUTHJWT_COOKIE_MAX_AGE, "true")
     authorize.unset_jwt_cookies()
