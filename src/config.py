@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     AUTHJWT_COOKIE_SECURE: bool
     AUTHJWT_COOKIE_CSRF_PROTECT: bool
     AUTHJWT_DENYLIST_ENABLED: bool
+    AUTHJWT_DENYLIST_TOKEN_CHECKS: set = {"access", "refresh"}
     AUTHJWT_COOKIE_MAX_AGE: int
     REDIS_HOST: str
     REDIS_PASSWORD: str
