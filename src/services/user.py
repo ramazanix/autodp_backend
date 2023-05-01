@@ -62,3 +62,7 @@ async def get_all(db: AsyncSession, bound: int | None = None) -> Sequence[User]:
         .scalars()
         .all()
     )
+
+
+async def get_by_id(db: AsyncSession, user_id: int | str) -> User | None:
+    return await db.get(User, user_id)
