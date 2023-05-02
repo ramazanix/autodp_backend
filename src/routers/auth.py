@@ -1,21 +1,16 @@
+from typing import Annotated
 from ..schemas.user import UserSchemaCreate
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..config import settings
 from ..db import get_db
 from fastapi_jwt_auth import AuthJWT
-from ..services.user import get_with_paswd, get_by_id
-from redis import Redis
+from ..services.user import get_with_paswd
+from ..dependencies import Auth, base_auth, auth_checker, auth_checker_refresh
+from ..security import redis_conn
+
 
 auth_router = APIRouter(prefix="/auth", tags=["Authenticate"])
-redis_conn = Redis(
-    host=settings.REDIS_HOST, password=settings.REDIS_PASSWORD, decode_responses=True
-)
-
-
-@AuthJWT.load_config
-def get_config():
-    return settings
 
 
 @AuthJWT.token_in_denylist_loader
@@ -28,8 +23,8 @@ def check_if_token_in_denylist(decrypted_token: str) -> bool:
 @auth_router.post("/login")
 async def login(
     user: UserSchemaCreate,
-    db: AsyncSession = Depends(get_db),
-    authorize: AuthJWT = Depends(),
+    db: Annotated[AsyncSession, Depends(get_db)],
+    authorize: Annotated[Auth, Depends(base_auth)],
 ):
     db_user = await get_with_paswd(db, user)
     if not db_user:
@@ -49,27 +44,22 @@ async def login(
 
 @auth_router.post("/refresh")
 async def refresh_access_token(
-    db: AsyncSession = Depends(get_db), authorize: AuthJWT = Depends()
+    db: Annotated[AsyncSession, Depends(get_db)],
+    authorize: Annotated[Auth, Depends(auth_checker_refresh)],
 ):
-    authorize.jwt_refresh_token_required()
-    user_claims = authorize.get_raw_jwt()["user_claims"]
-    jti = authorize.get_raw_jwt()["jti"]
-    user_id = user_claims["id"]
-
-    current_user = await get_by_id(db, user_id)
-
+    current_user = await authorize.get_current_user(db)
+    new_user_claims = {"user_claims": authorize.user_claims}
     new_access_token = authorize.create_access_token(
-        subject=current_user.username, user_claims=user_claims
+        subject=current_user.username, user_claims=new_user_claims
     )
-    redis_conn.setex(jti, settings.AUTHJWT_COOKIE_MAX_AGE, "true")
+    redis_conn.setex(authorize.jti, settings.AUTHJWT_COOKIE_MAX_AGE, "true")
     authorize.set_access_cookies(new_access_token)
     return {"success": "The token has been refreshed"}
 
 
 @auth_router.delete("/logout")
-async def logout(authorize: AuthJWT = Depends()):
-    authorize.jwt_required()
-    jti = authorize.get_raw_jwt()["jti"]
+async def logout(authorize: Annotated[Auth, Depends(auth_checker)]):
+    jti = authorize.jti
     redis_conn.setex(jti, settings.AUTHJWT_COOKIE_MAX_AGE, "true")
     authorize.unset_jwt_cookies()
     return {"success": "Successfully logout"}
