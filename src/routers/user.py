@@ -5,7 +5,7 @@ from ..schemas.user import UserSchemaCreate, UserSchema, UserSchemaUpdate
 from ..services.user import create, update, delete, get_all, get_by_username
 from ..config import settings
 from ..db import get_db
-from ..dependencies import Auth, auth_checker, base_auth
+from ..dependencies import Auth, auth_checker
 from ..security import redis_conn
 
 
