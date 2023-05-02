@@ -146,7 +146,7 @@ async def test_get_current_user(client: AsyncClient):
     """
     Trying to get current user
     """
-    response = await client.get("/user")
+    response = await client.get("/users/me")
     assert response.status_code == 401
     assert exact_schema(error)
 
@@ -160,6 +160,6 @@ async def test_get_current_user(client: AsyncClient):
     assert exact_schema(success) == response.json()
     assert list(response.cookies.keys()) == correct_cookies
 
-    response = await client.get("/user")
+    response = await client.get("/users/me")
     assert response.status_code == 200
     assert exact_schema(user)
