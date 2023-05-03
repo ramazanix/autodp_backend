@@ -1,10 +1,9 @@
 [tool.poetry]
-name = "my-trening"
+name = "autodp"
 version = "0.1.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
-packages = [{include = "my_trening"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
