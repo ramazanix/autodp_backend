@@ -45,7 +45,7 @@ jobs:
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
       - name: Start redis container
-        run: docker compose up --build -d --env-file=.env.dev redis
+        run: docker compose --env-file .env.dev up --build -d redis
 
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
