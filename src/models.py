@@ -31,6 +31,4 @@ class Role(Base):
     id = Column(Uuid, primary_key=True, default=uuid4)
     name = Column(String, unique=True, nullable=False, index=True)
     description = Column(String)
-    users = relationship(
-        "User", back_populates="role", order_by="User.created_at", lazy="selectin"
-    )
+    users = relationship("User", back_populates="role", order_by="User.created_at")
