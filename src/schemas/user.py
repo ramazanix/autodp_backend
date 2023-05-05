@@ -3,11 +3,10 @@ from datetime import datetime
 
 
 class UserSchemaBase(BaseModel):
-    username: str
-
-
-class UserSchemaCreate(BaseModel):
     username: str = Field(min_length=2, max_length=20)
+
+
+class UserSchemaCreate(UserSchemaBase):
     password: str = Field(min_length=8, max_length=32)
 
 
@@ -19,7 +18,6 @@ class UserSchemaUpdate(BaseModel):
 class UserSchema(BaseModel):
     id: UUID4
     username: str
-    role: "RoleSchemaBase"
     created_at: str
     updated_at: str
 
@@ -29,8 +27,3 @@ class UserSchema(BaseModel):
 
     class Config:
         orm_mode = True
-
-
-from .role import RoleSchemaBase
-
-UserSchema.update_forward_refs()
