@@ -20,7 +20,6 @@ def init_app(init_db=True):
 
     from .routers.auth import auth_router
     from .routers.user import users_router
-    from .routers.role import roles_router
     from .handlers import auth_jwt_exception_handler
     from fastapi_jwt_auth.exceptions import AuthJWTException
     from fastapi.middleware.cors import CORSMiddleware
@@ -31,7 +30,6 @@ def init_app(init_db=True):
 
     server.include_router(auth_router)
     server.include_router(users_router)
-    server.include_router(roles_router)
     server.add_exception_handler(AuthJWTException, auth_jwt_exception_handler)
     server.add_middleware(
         CORSMiddleware,
