@@ -1,14 +1,16 @@
 import asyncio
+from uuid import uuid4
 import pytest
 from contextlib import ExitStack
-
+from sqlalchemy import text
 import pytest_asyncio
-
 from src import init_app
 from src.db import get_db, session_manager
+from src.redis import RedisClient
 from httpx import AsyncClient
 from pytest_postgresql import factories
 from pytest_postgresql.janitor import DatabaseJanitor
+from src.enums import RoleEnum
 
 
 @pytest.fixture(autouse=True)
@@ -48,6 +50,7 @@ async def connection_test(test_db, event_loop):
         session_manager.init(test_db_url)
         yield
         await session_manager.close()
+        RedisClient().clear()
 
 
 @pytest_asyncio.fixture(autouse=True)
@@ -55,6 +58,15 @@ async def create_tables(connection_test):
     async with session_manager.connect() as connection:
         await session_manager.drop_all(connection)
         await session_manager.create_all(connection)
+        roles = [
+            {"id": uuid4(), "name": role.name, "description": role.value}
+            for role in RoleEnum
+        ]
+        stmt = text(
+            """INSERT INTO roles(id, name, description) VALUES(:id, :name, :description)"""
+        )
+        for role in roles:
+            await connection.execute(stmt, role)
 
 
 @pytest_asyncio.fixture(autouse=True)
