@@ -6,10 +6,11 @@ from ..services.user import create, update, delete, get_all, get_by_username
 from ..config import settings
 from ..db import get_db
 from ..dependencies import Auth, auth_checker
-from ..security import redis_conn
+from ..redis import RedisClient
 
 
 users_router = APIRouter(prefix="/users", tags=["Users"])
+redis_conn = RedisClient().conn
 
 
 @users_router.get("/me", response_model=UserSchema)
