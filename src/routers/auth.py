@@ -7,10 +7,11 @@ from ..db import get_db
 from fastapi_jwt_auth import AuthJWT
 from ..services.user import get_with_paswd
 from ..dependencies import Auth, base_auth, auth_checker, auth_checker_refresh
-from ..security import redis_conn
+from ..redis import RedisClient
 
 
 auth_router = APIRouter(prefix="/auth", tags=["Authenticate"])
+redis_conn = RedisClient().conn
 
 
 @AuthJWT.token_in_denylist_loader
