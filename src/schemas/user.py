@@ -19,7 +19,7 @@ class UserSchemaUpdate(BaseModel):
 class UserSchema(BaseModel):
     id: UUID4
     username: str
-    role: "RoleSchemaBase"
+    role: "RoleSchemaBase" = Field(exclude={"id"})
     created_at: str
     updated_at: str
 
