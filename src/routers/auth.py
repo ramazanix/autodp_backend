@@ -38,9 +38,7 @@ async def login(
     refresh_token = authorize.create_refresh_token(
         subject=user.username, user_claims=user_claims
     )
-    authorize.set_access_cookies(access_token)
-    authorize.set_refresh_cookies(refresh_token)
-    return {"success": "Successfully logged in"}
+    return {"access_token": access_token, "refresh_token": refresh_token}
 
 
 @auth_router.post("/refresh")
@@ -53,14 +51,11 @@ async def refresh_access_token(
     new_access_token = authorize.create_access_token(
         subject=current_user.username, user_claims=new_user_claims
     )
-    redis_conn.setex(authorize.jti, settings.AUTHJWT_COOKIE_MAX_AGE, "true")
-    authorize.set_access_cookies(new_access_token)
-    return {"success": "The token has been refreshed"}
+    redis_conn.setex(authorize.jti, settings.AUTHJWT_ACCESS_TOKEN_EXPIRES, "true")
+    return {"access_token": new_access_token}
 
 
-@auth_router.delete("/logout")
+@auth_router.delete("/logout", status_code=204)
 async def logout(authorize: Annotated[Auth, Depends(auth_checker)]):
     jti = authorize.jti
-    redis_conn.setex(jti, settings.AUTHJWT_COOKIE_MAX_AGE, "true")
-    authorize.unset_jwt_cookies()
-    return {"success": "Successfully logout"}
+    redis_conn.setex(jti, settings.AUTHJWT_ACCESS_TOKEN_EXPIRES, "true")
