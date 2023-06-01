@@ -11,7 +11,10 @@ roles_router = APIRouter(prefix="/roles", tags=["Roles"])
 
 
 @roles_router.get(
-    "", response_model=list[RoleSchemaBase], dependencies=[Depends(auth_checker)]
+    "",
+    response_model=list[RoleSchemaBase],
+    dependencies=[Depends(auth_checker)],
+    tags=["Admin"],
 )
 async def get_all_roles(
     db: Annotated[AsyncSession, Depends(get_db)], limit: int | None = Query(None, gt=0)
