@@ -7,4 +7,4 @@ class LoginOut(BaseModel):
 
 
 class RefreshOut(BaseModel):
-    refresh_token: str
+    access_token: str
