@@ -24,6 +24,7 @@ def init_app(init_db=True):
         swagger_ui_parameters={"operationsSorter": "alpha"},
     )
 
+    from .routers import admin_router
     from .routers.auth import auth_router
     from .routers.user import users_router
     from .routers.role import roles_router
@@ -35,6 +36,7 @@ def init_app(init_db=True):
         "http://localhost:3000",
     ]
 
+    server.include_router(admin_router)
     server.include_router(auth_router)
     server.include_router(users_router)
     server.include_router(roles_router)
