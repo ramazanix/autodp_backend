@@ -1,5 +1,6 @@
 from typing import Annotated
 from ..schemas.user import UserSchemaCreate
+from ..schemas.auth import LoginOut, RefreshOut
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..config import settings
@@ -21,7 +22,7 @@ def check_if_token_in_denylist(decrypted_token: str) -> bool:
     return entry and entry == "true"
 
 
-@auth_router.post("/login")
+@auth_router.post("/login", response_model=LoginOut)
 async def login(
     user: UserSchemaCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -41,7 +42,7 @@ async def login(
     return {"access_token": access_token, "refresh_token": refresh_token}
 
 
-@auth_router.post("/refresh")
+@auth_router.post("/refresh", response_model=RefreshOut)
 async def refresh_access_token(
     db: Annotated[AsyncSession, Depends(get_db)],
     authorize: Annotated[Auth, Depends(auth_checker_refresh)],
@@ -51,7 +52,7 @@ async def refresh_access_token(
     new_access_token = authorize.create_access_token(
         subject=current_user.username, user_claims=new_user_claims
     )
-    redis_conn.setex(authorize.jti, settings.AUTHJWT_ACCESS_TOKEN_EXPIRES, "true")
+    redis_conn.setex(authorize.jti, settings.AUTHJWT_REFRESH_TOKEN_EXPIRES, "true")
     return {"access_token": new_access_token}
 
 
