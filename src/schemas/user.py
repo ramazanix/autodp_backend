@@ -16,6 +16,10 @@ class UserSchemaUpdate(BaseModel):
     password: str | None = Field(min_length=8, max_length=32)
 
 
+class UserSchemaUpdateAdmin(UserSchemaUpdate):
+    role_name: str | None = Field(min_length=2, max_length=20)
+
+
 class UserSchema(BaseModel):
     id: UUID4
     username: str
