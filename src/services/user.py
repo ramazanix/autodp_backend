@@ -3,9 +3,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy import select as sa_select
 from sqlalchemy import update as sa_update
-from ..schemas.user import UserSchemaCreate, UserSchemaUpdate
+from ..schemas.user import UserSchemaCreate, UserSchemaUpdate, UserSchemaUpdateAdmin
 from ..security import get_password_hash, verify_password
 from collections.abc import Sequence
+from ..services.role import get_by_name
 
 
 async def create(db: AsyncSession, user: UserSchemaCreate) -> User | None:
@@ -19,12 +20,19 @@ async def create(db: AsyncSession, user: UserSchemaCreate) -> User | None:
     return db_user
 
 
-async def update(db: AsyncSession, payload: UserSchemaUpdate, user: User) -> User:
+async def update(
+    db: AsyncSession, payload: UserSchemaUpdate | UserSchemaUpdateAdmin, user: User
+) -> User:
     update_data = payload.dict(exclude_none=True, exclude_unset=True)
     if update_data.get("password"):
         hashed_passwd = get_password_hash(update_data.get("password"))
         update_data["hashed_password"] = hashed_passwd
         update_data.pop("password")
+
+    if role_name := update_data.get("role_name"):
+        db_role = await get_by_name(db, role_name)
+        update_data.pop("role_name")
+        update_data["role_id"] = db_role.id
 
     query = sa_update(User).where(User.username == user.username).values(update_data)
     await db.execute(query)
