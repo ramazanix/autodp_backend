@@ -11,7 +11,7 @@ from ..dependencies import Auth, base_auth, auth_checker, auth_checker_refresh
 from ..redis import RedisClient
 
 
-auth_router = APIRouter(prefix="/auth", tags=["Authenticate"])
+auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 redis_conn = RedisClient().conn
 
 
