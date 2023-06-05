@@ -4,7 +4,7 @@ from pytest_schema import exact_schema
 from .schemas import user, users
 
 
-user_data = {"username": "Paul", "password": "paul_password"}
+user_data = {"username": "username", "password": "password"}
 
 
 @pytest.mark.asyncio
@@ -14,22 +14,15 @@ async def test_create_user(client: AsyncClient):
     """
     response = await client.post("/users", json=user_data)
     assert response.status_code == 201
-
     assert exact_schema(user) == response.json()
-
     assert response.json().get("username") == user_data["username"]
 
 
 @pytest.mark.asyncio
-async def test_create_couple_users(client: AsyncClient):
+async def test_create_couple_users(client: AsyncClient, create_user):
     """
     Trying to create a couple of users
     """
-    response = await client.post("/users", json=user_data)
-    assert response.status_code == 201
-    assert exact_schema(user) == response.json()
-    assert response.json().get("username") == user_data["username"]
-
     response = await client.post(
         "/users", json={"username": "Tom", "password": "tom_password"}
     )
