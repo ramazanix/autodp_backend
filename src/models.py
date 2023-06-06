@@ -1,4 +1,14 @@
-from sqlalchemy import Column, String, Uuid, DateTime, ForeignKey, select, column, text
+from sqlalchemy import (
+    Column,
+    String,
+    Uuid,
+    DateTime,
+    ForeignKey,
+    select,
+    column,
+    text,
+    Text,
+)
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from uuid import uuid4
@@ -23,6 +33,13 @@ class User(Base):
         .select_from(text("roles")),
     )
     role = relationship("Role", back_populates="users", lazy="joined")
+    posts = relationship(
+        "Post",
+        back_populates="owner",
+        order_by="desc(Post.created_at)",
+        lazy="selectin",
+        uselist=True,
+    )
 
 
 class Role(Base):
@@ -33,4 +50,18 @@ class Role(Base):
     description = Column(String)
     users = relationship(
         "User", back_populates="role", order_by="User.created_at", lazy="selectin"
+    )
+
+
+class Post(Base):
+    __tablename__ = "posts"
+
+    id = Column(Uuid, primary_key=True, default=uuid4)
+    title = Column(String, unique=True, nullable=False, index=True)
+    text = Column(Text, nullable=False)
+    owner_id = Column(Uuid, ForeignKey("users.id"))
+    owner = relationship("User", back_populates="posts", lazy="joined")
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), onupdate=func.now(), default=func.now()
     )
