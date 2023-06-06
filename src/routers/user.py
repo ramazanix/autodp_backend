@@ -8,6 +8,7 @@ from ..schemas.user import (
     UserSchemaUpdate,
     UserSchemaUpdateAdmin,
 )
+from ..schemas.post import PostSchemaBase
 from ..services.user import create, update, delete, get_all, get_by_username
 from ..services.role import get_by_name
 from ..config import settings
@@ -136,3 +137,13 @@ async def delete_current_user(
 
     redis_conn.setex(authorize.jti, settings.AUTHJWT_REFRESH_TOKEN_EXPIRES, "true")
     return await delete(db, current_user)
+
+
+@users_router.get("/{username}/posts", response_model=list[PostSchemaBase])
+async def get_user_posts(
+    username: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    authorize: Annotated[Auth, Depends(auth_checker)],
+):
+    db_user = await get_by_username(db, username)
+    return db_user.posts
