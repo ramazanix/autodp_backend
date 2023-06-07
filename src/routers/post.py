@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..routers import admin_router
 from ..schemas.post import PostSchema, PostSchemaCreate, PostSchemaUpdate
-from ..services.post import get_all, get_by_id, create, update
+from ..services.post import get_all, get_by_id, create, update, delete
 from ..db import get_db
 from ..dependencies import Auth, auth_checker
 
@@ -56,3 +56,17 @@ async def update_post(
         raise HTTPException(status_code=400)
 
     return await update(db, payload, db_post)
+
+
+@admin_router.delete("/posts/{post_id}", status_code=204)
+@posts_router.delete("/{post_id}", status_code=204)
+async def delete_post(
+    post_id: UUID4,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    authorize: Annotated[Auth, Depends(auth_checker)],
+):
+    db_post = await get_by_id(db, post_id)
+    if not db_post:
+        raise HTTPException(status_code=400, detail="Post not found")
+
+    return await delete(db, db_post)
