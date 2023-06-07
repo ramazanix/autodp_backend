@@ -30,3 +30,8 @@ async def update(db: AsyncSession, payload: PostSchemaUpdate, post: Post) -> Pos
     await db.commit()
     await db.refresh(post)
     return post
+
+
+async def delete(db: AsyncSession, post: Post) -> None:
+    await db.delete(post)
+    await db.commit()
