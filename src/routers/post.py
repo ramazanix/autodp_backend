@@ -24,7 +24,10 @@ async def get_all_posts(
 @admin_router.get("/posts/{post_id}", response_model=PostSchema)
 @posts_router.get("/{post_id}", response_model=PostSchema)
 async def get_post(post_id: UUID4, db: Annotated[AsyncSession, Depends(get_db)]):
-    return await get_by_id(db, post_id)
+    post = await get_by_id(db, post_id)
+    if not post:
+        raise HTTPException(status_code=400, detail="Post not found")
+    return post
 
 
 @admin_router.post("/posts", response_model=PostSchema, status_code=201)
@@ -51,6 +54,10 @@ async def update_post(
     if not db_post:
         raise HTTPException(status_code=400, detail="Post not found")
 
+    current_user = await authorize.get_current_user(db)
+    if db_post.owner_id != current_user.id and current_user.role.name != "admin":
+        raise HTTPException(status_code=403)
+
     new_post_data: dict = payload.dict()
     if not any(new_post_data.values()):
         raise HTTPException(status_code=400)
@@ -68,5 +75,9 @@ async def delete_post(
     db_post = await get_by_id(db, post_id)
     if not db_post:
         raise HTTPException(status_code=400, detail="Post not found")
+
+    current_user = await authorize.get_current_user(db)
+    if db_post.owner_id != current_user.id and current_user.role.name != "admin":
+        raise HTTPException(status_code=403)
 
     return await delete(db, db_post)
