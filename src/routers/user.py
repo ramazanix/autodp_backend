@@ -50,9 +50,7 @@ async def update_user(
     db: Annotated[AsyncSession, Depends(get_db)],
     authorize: Annotated[Auth, Depends(auth_checker)],
 ):
-    current_user = await authorize.get_current_user(db)
-    if not current_user.role.name == "admin":
-        raise HTTPException(status_code=403)
+    await authorize.is_admin(db)
 
     existed_user = await get_by_username(db, username=username)
     if not existed_user:
@@ -76,9 +74,7 @@ async def delete_user(
     db: Annotated[AsyncSession, Depends(get_db)],
     authorize: Annotated[Auth, Depends(auth_checker)],
 ):
-    current_user = await authorize.get_current_user(db)
-    if not current_user.role.name == "admin":
-        raise HTTPException(status_code=403)
+    await authorize.is_admin(db)
 
     existed_user = await get_by_username(db, username)
     if not existed_user:
@@ -116,9 +112,6 @@ async def update_current_user(
 ):
     current_user = await authorize.get_current_user(db)
 
-    if not current_user:
-        raise HTTPException(status_code=401)
-
     new_user_data: dict = payload.dict()
     if not any(new_user_data.values()):
         raise HTTPException(status_code=400)
@@ -132,8 +125,6 @@ async def delete_current_user(
     authorize: Annotated[Auth, Depends(auth_checker)],
 ):
     current_user = await authorize.get_current_user(db)
-    if not current_user:
-        raise HTTPException(status_code=401)
 
     redis_conn.setex(authorize.jti, settings.AUTHJWT_REFRESH_TOKEN_EXPIRES, "true")
     return await delete(db, current_user)
