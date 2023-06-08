@@ -2,8 +2,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..routers import admin_router
-from ..schemas.role import RoleSchemaBase
-from ..services.role import get_all
+from ..schemas.role import RoleSchemaBase, RoleSchema
+from ..services.role import get_all, get_by_name
 from ..db import get_db
 from ..dependencies import Auth, auth_checker
 
@@ -18,8 +18,19 @@ async def get_all_roles(
     authorize: Annotated[Auth, Depends(auth_checker)],
     limit: int | None = Query(None, gt=0),
 ):
-    current_user = await authorize.get_current_user(db)
-    if not current_user.role.name == "admin":
-        raise HTTPException(status_code=403)
-
+    await authorize.is_admin(db)
     return await get_all(db, limit)
+
+
+@admin_router.get("/roles/{role_name}", response_model=RoleSchema)
+@roles_router.get("/{role_name}", response_model=RoleSchema)
+async def get_role(
+    role_name: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    authorize: Annotated[Auth, Depends(auth_checker)],
+):
+    await authorize.is_admin(db)
+    role = await get_by_name(db, role_name)
+    if not role:
+        raise HTTPException(status_code=400, detail="Role not found")
+    return role
