@@ -44,6 +44,11 @@ class Auth(AuthJWT):
             )
         return user
 
+    async def is_admin(self, db: AsyncSession) -> bool:
+        if not (await self.get_current_user(db)).role.name == "admin":
+            raise HTTPException(status_code=403)
+        return True
+
 
 base_auth = Auth(check_token=False)
 auth_checker = Auth()
