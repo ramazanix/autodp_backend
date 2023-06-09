@@ -34,7 +34,7 @@ async def get_current_user(
 async def create_user(
     user: UserSchemaCreate, db: Annotated[AsyncSession, Depends(get_db)]
 ):
-    if user.username in ["me", "super_user"]:
+    if user.username in settings.RESERVED_USERNAMES:
         raise HTTPException(status_code=400, detail="Not allowed username")
     new_user = await create(db, user)
 
@@ -52,6 +52,9 @@ async def update_user(
 ):
     await authorize.is_admin(db)
 
+    if payload.username in settings.RESERVED_USERNAMES:
+        raise HTTPException(status_code=400, detail="Not allowed username")
+
     existed_user = await get_by_username(db, username=username)
     if not existed_user:
         raise HTTPException(status_code=400, detail="User not found")
@@ -64,6 +67,11 @@ async def update_user(
         db_role = await get_by_name(db, role_name)
         if not db_role:
             raise HTTPException(status_code=400, detail="Role not found")
+
+    if new_user_data.get("username") and username != payload.username:
+        another_user = await get_by_username(db, payload.username)
+        if another_user:
+            raise HTTPException(status_code=400, detail="Username occupied")
 
     return await update(db, payload, existed_user)
 
@@ -112,9 +120,17 @@ async def update_current_user(
 ):
     current_user = await authorize.get_current_user(db)
 
+    if payload.username in settings.RESERVED_USERNAMES:
+        raise HTTPException(status_code=400, detail="Not allowed username")
+
     new_user_data: dict = payload.dict()
     if not any(new_user_data.values()):
         raise HTTPException(status_code=400)
+
+    if new_user_data.get("username") and current_user.username != payload.username:
+        another_user = await get_by_username(db, payload.username)
+        if another_user:
+            raise HTTPException(status_code=400, detail="Username occupied")
 
     return await update(db, payload, current_user)
 
