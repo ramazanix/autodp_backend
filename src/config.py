@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     REDIS_HOST: str
     REDIS_PASSWORD: str
     SUPER_USER_PASSWORD: str
+    RESERVED_USERNAMES: list[str] = ["me", "super_user"]
 
     class Config:
         env_file = "./.env"
