@@ -8,6 +8,7 @@ from ..schemas.user import (
     UserSchemaUpdate,
     UserSchemaUpdateAdmin,
 )
+from ..schemas.post import PostSchemaBase
 from ..services.user import create, update, delete, get_all, get_by_username
 from ..services.role import get_by_name
 from ..config import settings
@@ -33,7 +34,7 @@ async def get_current_user(
 async def create_user(
     user: UserSchemaCreate, db: Annotated[AsyncSession, Depends(get_db)]
 ):
-    if user.username in ["me", "super_user"]:
+    if user.username in settings.RESERVED_USERNAMES:
         raise HTTPException(status_code=400, detail="Not allowed username")
     new_user = await create(db, user)
 
@@ -49,9 +50,10 @@ async def update_user(
     db: Annotated[AsyncSession, Depends(get_db)],
     authorize: Annotated[Auth, Depends(auth_checker)],
 ):
-    current_user = await authorize.get_current_user(db)
-    if not current_user.role.name == "admin":
-        raise HTTPException(status_code=403)
+    await authorize.is_admin(db)
+
+    if payload.username in settings.RESERVED_USERNAMES:
+        raise HTTPException(status_code=400, detail="Not allowed username")
 
     existed_user = await get_by_username(db, username=username)
     if not existed_user:
@@ -66,6 +68,11 @@ async def update_user(
         if not db_role:
             raise HTTPException(status_code=400, detail="Role not found")
 
+    if new_user_data.get("username") and username != payload.username:
+        another_user = await get_by_username(db, payload.username)
+        if another_user:
+            raise HTTPException(status_code=400, detail="Username occupied")
+
     return await update(db, payload, existed_user)
 
 
@@ -75,9 +82,7 @@ async def delete_user(
     db: Annotated[AsyncSession, Depends(get_db)],
     authorize: Annotated[Auth, Depends(auth_checker)],
 ):
-    current_user = await authorize.get_current_user(db)
-    if not current_user.role.name == "admin":
-        raise HTTPException(status_code=403)
+    await authorize.is_admin(db)
 
     existed_user = await get_by_username(db, username)
     if not existed_user:
@@ -115,12 +120,17 @@ async def update_current_user(
 ):
     current_user = await authorize.get_current_user(db)
 
-    if not current_user:
-        raise HTTPException(status_code=401)
+    if payload.username in settings.RESERVED_USERNAMES:
+        raise HTTPException(status_code=400, detail="Not allowed username")
 
     new_user_data: dict = payload.dict()
     if not any(new_user_data.values()):
         raise HTTPException(status_code=400)
+
+    if new_user_data.get("username") and current_user.username != payload.username:
+        another_user = await get_by_username(db, payload.username)
+        if another_user:
+            raise HTTPException(status_code=400, detail="Username occupied")
 
     return await update(db, payload, current_user)
 
@@ -131,8 +141,16 @@ async def delete_current_user(
     authorize: Annotated[Auth, Depends(auth_checker)],
 ):
     current_user = await authorize.get_current_user(db)
-    if not current_user:
-        raise HTTPException(status_code=401)
 
     redis_conn.setex(authorize.jti, settings.AUTHJWT_REFRESH_TOKEN_EXPIRES, "true")
     return await delete(db, current_user)
+
+
+@users_router.get("/{username}/posts", response_model=list[PostSchemaBase])
+async def get_user_posts(
+    username: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    authorize: Annotated[Auth, Depends(auth_checker)],
+):
+    db_user = await get_by_username(db, username)
+    return db_user.posts
