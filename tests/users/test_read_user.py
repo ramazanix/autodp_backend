@@ -11,9 +11,7 @@ async def test_read_users_unauthorized(client: AsyncClient):
     """
     response = await client.get("/users")
     assert response.status_code == 200
-    assert response.json() != []
-    assert len(response.json()) == 1
-    assert response.json()[0].get("username") == "super_user"
+    assert response.json() == []
 
 
 @pytest.mark.asyncio

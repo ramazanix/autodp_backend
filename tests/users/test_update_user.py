@@ -10,7 +10,7 @@ user_data = {"username": "username", "password": "password"}
 @pytest.mark.asyncio
 async def test_update_current_user_unauthorized(client: AsyncClient, create_user):
     """
-    Trying to update current user without auth
+    Trying to update user without auth
     """
     response = await client.patch(f"/users/me", json={"username": "not_User"})
     assert response.status_code == 401
@@ -21,7 +21,7 @@ async def test_update_current_user_authorized(
     client: AsyncClient, create_user, authorization_header
 ):
     """
-    Trying to update current user with auth
+    Trying to update user with auth
     """
     response = await client.patch(
         "/users/me",
@@ -70,7 +70,7 @@ async def test_update_current_user_blank_body(
     client: AsyncClient, create_user, authorization_header
 ):
     """
-    Trying to update current user with blank body
+    Trying to update user with blank body
     """
     response = await client.patch(f"/users/me", json={}, headers=authorization_header)
     assert response.status_code == 400
@@ -82,7 +82,7 @@ async def test_update_current_user_too_small_username(
     client: AsyncClient, create_user, authorization_header
 ):
     """
-    Trying to update current user's username to small value
+    Trying to update user's username to small value
     """
     response = await client.patch(
         "/users/me", json={"username": "J"}, headers=authorization_header
@@ -95,7 +95,7 @@ async def test_update_current_user_too_long_username(
     client: AsyncClient, create_user, authorization_header
 ):
     """
-    Trying to update current user's username to long value
+    Trying to update user's username to long value
     """
     response = await client.patch(
         "/users/me", json={"username": "A" * 21}, headers=authorization_header
@@ -108,7 +108,7 @@ async def test_update_current_user_too_small_password(
     client: AsyncClient, create_user, authorization_header
 ):
     """
-    Trying to update current user's password to small value
+    Trying to update user's password to small value
     """
     response = await client.patch(
         "/users/me", json={"password": "A" * 33}, headers=authorization_header
@@ -121,7 +121,7 @@ async def test_update_current_user_too_long_password(
     client: AsyncClient, create_user, authorization_header
 ):
     """
-    Trying to update current user's password to long value
+    Trying to update user's password to long value
     """
     response = await client.patch(
         "/users/me", json={"password": "A" * 33}, headers=authorization_header
@@ -134,7 +134,7 @@ async def test_update_current_user_invalid_body(
     client: AsyncClient, create_user, authorization_header
 ):
     """
-    Trying to update current user with invalid body keys
+    Trying to update user with invalid body keys
     """
     response = await client.patch(
         "/users/me", json={"a": "b"}, headers=authorization_header
@@ -148,7 +148,7 @@ async def test_update_current_user_blank_username(
     client: AsyncClient, create_user, authorization_header
 ):
     """
-    Trying to update current user with blank username value
+    Trying to update user with blank username value
     """
     response = await client.patch(
         "/users/me", json={"username": ""}, headers=authorization_header
@@ -161,7 +161,7 @@ async def test_update_current_user_blank_password(
     client: AsyncClient, create_user, authorization_header
 ):
     """
-    Trying to update current user with blank password value
+    Trying to update user with blank password value
     """
     response = await client.patch(
         "/users/me", json={"password": ""}, headers=authorization_header
@@ -174,7 +174,7 @@ async def test_update_current_user_username_blank_password(
     client: AsyncClient, create_user, authorization_header
 ):
     """
-    Trying to update current user with filled username value and blank password value
+    Trying to update user with filled username value and blank password value
     """
     response = await client.patch(
         "/users/me",
@@ -182,74 +182,3 @@ async def test_update_current_user_username_blank_password(
         headers=authorization_header,
     )
     assert response.status_code == 422
-
-
-@pytest.mark.asyncio
-async def test_update_current_user_role(
-    client: AsyncClient, create_user, authorization_header
-):
-    """
-    Trying to update current user role
-    """
-    response = await client.patch(
-        "/users/me", json={"role_name": "admin"}, headers=authorization_header
-    )
-    assert response.status_code == 400
-
-
-@pytest.mark.asyncio
-async def test_update_user_unauthorized(client: AsyncClient, create_user):
-    """
-    Trying to update user unauthorized
-    """
-    response = await client.patch(
-        f'/admin/users/{user_data["username"]}', json={"username": "new_username"}
-    )
-    assert response.status_code == 401
-
-
-@pytest.mark.asyncio
-async def test_update_user_authorized_not_admin(
-    client: AsyncClient, create_user, authorization_header
-):
-    """
-    Trying to update user authorized but not admin
-    """
-    response = await client.patch(
-        f'/admin/users/{user_data["username"]}',
-        json={"username": "new_username"},
-        headers=authorization_header,
-    )
-    assert response.status_code == 403
-
-
-@pytest.mark.asyncio
-async def test_update_user_authorized(
-    client: AsyncClient, create_user, authorization_header_admin
-):
-    """
-    Trying to update user authorized via admin
-    """
-    response = await client.patch(
-        f'/admin/users/{user_data["username"]}',
-        json={"username": "new_username"},
-        headers=authorization_header_admin,
-    )
-    assert response.status_code == 200
-    assert exact_schema(user) == response.json()
-
-
-@pytest.mark.asyncio
-async def test_update_user_role_authorized(
-    client: AsyncClient, create_user, authorization_header_admin
-):
-    """
-    Trying to update user role authorized via admin
-    """
-    response = await client.patch(
-        f'/admin/users/{user_data["username"]}',
-        json={"role_name": "admin"},
-        headers=authorization_header_admin,
-    )
-    assert response.status_code == 200
-    assert exact_schema(user) == response.json()

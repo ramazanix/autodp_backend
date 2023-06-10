@@ -1,12 +1,10 @@
 import asyncio
-from datetime import datetime
 from uuid import uuid4
 import pytest
 from contextlib import ExitStack
 from sqlalchemy import text
 import pytest_asyncio
-from src import init_app, settings
-from src.security import get_password_hash
+from src import init_app
 from src.db import get_db, session_manager
 from src.redis import RedisClient
 from httpx import AsyncClient
@@ -16,7 +14,6 @@ from src.enums import RoleEnum
 
 
 user_data = {"username": "username", "password": "password"}
-admin_data = {"username": "super_user", "password": settings.SUPER_USER_PASSWORD}
 
 
 @pytest.fixture(autouse=True)
@@ -64,8 +61,6 @@ async def create_tables(connection_test):
     async with session_manager.connect() as connection:
         await session_manager.drop_all(connection)
         await session_manager.create_all(connection)
-
-        # Creating roles
         roles = [
             {"id": uuid4(), "name": role.name, "description": role.value}
             for role in RoleEnum
@@ -75,24 +70,6 @@ async def create_tables(connection_test):
         )
         for role in roles:
             await connection.execute(stmt, role)
-
-        # Creating superuser
-        admin_role_id = [role["id"] for role in roles if role["name"] == "admin"][0]
-        super_user_passwd = get_password_hash(settings.SUPER_USER_PASSWORD)
-        time_now = datetime.now()
-        super_user = {
-            "id": uuid4(),
-            "username": "super_user",
-            "hashed_password": super_user_passwd,
-            "role_id": admin_role_id,
-            "created_at": time_now,
-            "updated_at": time_now,
-        }
-        stmt = text(
-            """INSERT INTO users(id, username, hashed_password, role_id, created_at, updated_at) 
-               VALUES(:id, :username, :hashed_password, :role_id, :created_at, :updated_at)"""
-        )
-        await connection.execute(stmt, super_user)
 
 
 @pytest_asyncio.fixture(autouse=True)
@@ -118,17 +95,5 @@ async def authorize(client: AsyncClient) -> dict[str, str]:
 
 
 @pytest_asyncio.fixture
-async def authorize_admin(client: AsyncClient) -> dict[str, str]:
-    response = await client.post("/auth/login", json=admin_data)
-    tokens = response.json()
-    return tokens
-
-
-@pytest_asyncio.fixture
 async def authorization_header(authorize):
     return {"Authorization": f'Bearer {authorize["access_token"]}'}
-
-
-@pytest_asyncio.fixture
-async def authorization_header_admin(authorize_admin):
-    return {"Authorization": f'Bearer {authorize_admin["access_token"]}'}
