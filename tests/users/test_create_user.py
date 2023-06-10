@@ -33,7 +33,7 @@ async def test_create_couple_users(client: AsyncClient, create_user):
 
     response = await client.get("/users")
     assert response.status_code == 200
-    assert len(response.json()) == 2
+    assert len(response.json()) == 3
     assert exact_schema(users) == response.json()
 
 
