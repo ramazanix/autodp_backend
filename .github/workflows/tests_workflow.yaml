@@ -66,6 +66,7 @@ jobs:
         run: |
           source .venv/bin/activate
           cat .env.dev >> .env
+          alembic upgrade head
           pytest tests/
         env:
           REDIS_HOST: localhost
