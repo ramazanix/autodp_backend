@@ -153,4 +153,7 @@ async def get_user_posts(
     authorize: Annotated[Auth, Depends(auth_checker)],
 ):
     db_user = await get_by_username(db, username)
+    if not db_user:
+        raise HTTPException(status_code=400, detail="User not found")
+
     return db_user.posts
