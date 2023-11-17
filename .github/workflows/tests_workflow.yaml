@@ -62,7 +62,7 @@ jobs:
       - name: Run tests
         run: |
           source .venv/bin/activate
-          cat .env.prod >> .env
+          cat .env.dev >> .env
           pytest tests/
         env:
           REDIS_HOST: localhost
