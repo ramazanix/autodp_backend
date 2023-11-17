@@ -1,4 +1,5 @@
 import redis
+from src import settings
 
 
 class Singleton(type):
@@ -30,3 +31,8 @@ class RedisClient(metaclass=Singleton):
         if not hasattr(self, "_conn"):
             raise Exception("RedisClient is not initialized")
         self._conn.flushdb()
+
+
+redis_conn = RedisClient(
+    host=settings.REDIS_HOST, password=settings.REDIS_PASSWORD
+).conn
