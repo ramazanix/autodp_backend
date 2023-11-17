@@ -14,11 +14,10 @@ from ..services.role import get_by_name
 from ..config import settings
 from ..db import get_db
 from ..dependencies import Auth, auth_checker
-from ..redis import RedisClient
+from ..redis import redis_conn
 
 
 users_router = APIRouter(prefix="/users", tags=["Users"])
-redis_conn = RedisClient().conn
 
 
 @users_router.get("/me", response_model=UserSchema)
