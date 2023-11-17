@@ -12,4 +12,7 @@ RUN pip install --no-cache-dir --upgrade -r /autodp/requirements.txt
 COPY ./src /autodp/src
 COPY ./alembic.ini /autodp/alembic.ini
 COPY ./alembic /autodp/alembic
+
+RUN chmod +x /autodp/alembic/apply_migrations.sh
+ENTRYPOINT ["/autodp/alembic/apply_migrations.sh"]
 CMD ["uvicorn", "src:init_app", "--host", "0.0.0.0", "--port", "80"]
