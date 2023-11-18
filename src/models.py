@@ -41,7 +41,7 @@ class User(Base):
         lazy="selectin",
         uselist=True,
     )
-    avatar = relationship("Image", back_populates='user')
+    avatar = relationship("Image", back_populates="user")
 
 
 class Role(Base):
