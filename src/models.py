@@ -8,6 +8,7 @@ from sqlalchemy import (
     column,
     text,
     Text,
+    Integer,
 )
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -40,6 +41,7 @@ class User(Base):
         lazy="selectin",
         uselist=True,
     )
+    avatar = relationship("Image", back_populates='user')
 
 
 class Role(Base):
@@ -65,3 +67,14 @@ class Post(Base):
     updated_at = Column(
         DateTime(timezone=True), onupdate=func.now(), default=func.now()
     )
+
+
+class Image(Base):
+    __tablename__ = "images"
+
+    id = Column(Uuid, primary_key=True, default=uuid4)
+    name = Column(String, nullable=False)
+    size = Column(Integer, nullable=False)
+    location = Column(String, unique=True, nullable=False)
+    user_id = Column(Uuid, ForeignKey("users.id"), nullable=False)
+    user = relationship("User", back_populates="images", lazy="joined")
