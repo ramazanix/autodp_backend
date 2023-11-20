@@ -14,7 +14,7 @@ from src.security import get_password_hash
 
 # revision identifiers, used by Alembic.
 revision = "638af974e16f"
-down_revision = "99d9e8ba1d28"
+down_revision = '7cfe414c348e'
 branch_labels = None
 depends_on = None
 
@@ -23,8 +23,9 @@ def upgrade() -> None:
     super_user_password = get_password_hash(settings.SUPER_USER_PASSWORD)
     time_now = datetime.now()
     query = (
-        f"INSERT INTO users (id, username, hashed_password, role_id, created_at, updated_at) values ('{uuid4()}', "
-        f"'super_user', '{super_user_password}', (select id FROM roles WHERE name='admin'), '{time_now}', '{time_now}')"
+        f"INSERT INTO users (id, username, hashed_password, role_id, created_at, updated_at, avatar_id) values ('{uuid4()}', "
+        f"'super_user', '{super_user_password}', (select id FROM roles WHERE name='admin'), '{time_now}', '{time_now}',"
+        f"(select id FROM images WHERE name='default_avatar'))"
     )
     op.execute(query)
 
