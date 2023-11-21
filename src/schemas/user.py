@@ -19,6 +19,10 @@ class UserSchemaUpdate(BaseModel):
     password: str | None = Field(min_length=8, max_length=32)
 
 
+class UserSchemaUpdateAvatar(BaseModel):
+    avatar_id: UUID4 | None
+
+
 class UserSchemaUpdateAdmin(UserSchemaUpdate):
     role_name: str | None = Field(min_length=2, max_length=20)
 
@@ -29,6 +33,7 @@ class UserSchema(BaseModel):
     role: "RoleSchemaBase" = Field(exclude={"id"})
     created_at: str
     updated_at: str
+    avatar: "ImageSchemaBase" = Field()
 
     @validator("created_at", "updated_at", pre=True)
     def parse_dates(cls, value):
@@ -39,5 +44,6 @@ class UserSchema(BaseModel):
 
 
 from .role import RoleSchemaBase
+from .image import ImageSchemaBase
 
 UserSchema.update_forward_refs()
