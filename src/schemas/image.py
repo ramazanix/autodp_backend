@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class ImageBase(BaseModel):
+class ImageSchemaBase(BaseModel):
     name: str
     size: int
     location: str
@@ -15,4 +15,3 @@ class ImageSchema(BaseModel):
     name: str
     size: int
     location: str
-    user_id: str
