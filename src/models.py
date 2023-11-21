@@ -11,7 +11,7 @@ from sqlalchemy import (
     Integer,
 )
 from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from uuid import uuid4
 from src.db import Base
 
@@ -41,7 +41,16 @@ class User(Base):
         lazy="selectin",
         uselist=True,
     )
-    avatar = relationship("Image", back_populates="user")
+    avatar_id = Column(
+        Uuid,
+        ForeignKey("images.id"),
+        default=select(column("id"))
+        .where(column("name") == "default_avatar")
+        .select_from(text("images")),
+    )
+    avatar = relationship(
+        "Image", backref=backref("user", uselist=False), lazy="selectin"
+    )
 
 
 class Role(Base):
@@ -76,5 +85,3 @@ class Image(Base):
     name = Column(String, nullable=False)
     size = Column(Integer, nullable=False)
     location = Column(String, unique=True, nullable=False)
-    user_id = Column(Uuid, ForeignKey("users.id"), nullable=False)
-    user = relationship("User", back_populates="images", lazy="joined")
