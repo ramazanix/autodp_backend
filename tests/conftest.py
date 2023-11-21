@@ -17,6 +17,7 @@ from src.enums import RoleEnum
 
 user_data = {"username": "username", "password": "password"}
 admin_data = {"username": "super_user", "password": settings.SUPER_USER_PASSWORD}
+default_avatar_data = {"name": "default_avatar", "size": 1, "location": "path"}
 
 
 @pytest.fixture(autouse=True)
@@ -76,8 +77,26 @@ async def create_tables(connection_test):
         for role in roles:
             await connection.execute(stmt, role)
 
+        # Creating images
+        images = [
+            {
+                "id": uuid4(),
+                "name": default_avatar_data["name"],
+                "size": default_avatar_data["size"],
+                "location": default_avatar_data["location"],
+            }
+        ]
+        stmt = text(
+            """INSERT INTO images(id, name, size, location) VALUES(:id, :name, :size, :location)"""
+        )
+        for image in images:
+            await connection.execute(stmt, image)
+
         # Creating superuser
         admin_role_id = [role["id"] for role in roles if role["name"] == "admin"][0]
+        admin_avatar_id = [
+            image["id"] for image in images if image["name"] == "default_avatar"
+        ][0]
         super_user_passwd = get_password_hash(settings.SUPER_USER_PASSWORD)
         time_now = datetime.now()
         super_user = {
@@ -87,10 +106,11 @@ async def create_tables(connection_test):
             "role_id": admin_role_id,
             "created_at": time_now,
             "updated_at": time_now,
+            "avatar_id": admin_avatar_id,
         }
         stmt = text(
-            """INSERT INTO users(id, username, hashed_password, role_id, created_at, updated_at) 
-               VALUES(:id, :username, :hashed_password, :role_id, :created_at, :updated_at)"""
+            """INSERT INTO users(id, username, hashed_password, role_id, created_at, updated_at, avatar_id) 
+               VALUES(:id, :username, :hashed_password, :role_id, :created_at, :updated_at, :avatar_id)"""
         )
         await connection.execute(stmt, super_user)
 
