@@ -19,7 +19,9 @@ class DatabaseSessionManager:
 
     def init(self, host: str):
         self._engine = create_async_engine(host)
-        self._session_maker = async_sessionmaker(bind=self._engine, autocommit=False)
+        self._session_maker = async_sessionmaker(
+            bind=self._engine, autocommit=False, expire_on_commit=False
+        )
 
     @contextlib.asynccontextmanager
     async def connect(self) -> AsyncIterator[AsyncConnection]:
