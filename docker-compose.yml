@@ -25,6 +25,7 @@ services:
     build: .
     volumes:
       - ./src:/autodp/src
+      - ./static:/static
     ports:
       - '80:80'
     depends_on:
