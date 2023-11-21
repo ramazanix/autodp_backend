@@ -3,7 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy import select as sa_select
 from sqlalchemy import update as sa_update
-from ..schemas.user import UserSchemaCreate, UserSchemaUpdate, UserSchemaUpdateAdmin
+from ..schemas.user import (
+    UserSchemaCreate,
+    UserSchemaUpdate,
+    UserSchemaUpdateAdmin,
+    UserSchemaUpdateAvatar,
+)
 from ..security import get_password_hash, verify_password
 from collections.abc import Sequence
 from ..services.role import get_by_name
@@ -35,6 +40,17 @@ async def update(
         update_data["role_id"] = db_role.id
 
     query = sa_update(User).where(User.username == user.username).values(update_data)
+    await db.execute(query)
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+async def update_avatar(
+    db: AsyncSession, avatar_id: UserSchemaUpdateAvatar, user: User
+) -> User:
+    update_dict = avatar_id.dict()
+    query = sa_update(User).where(User.username == user.username).values(update_dict)
     await db.execute(query)
     await db.commit()
     await db.refresh(user)
