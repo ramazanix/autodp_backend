@@ -1,5 +1,13 @@
+import os
+import aiofiles
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Query,
+    UploadFile,
+)
 from ..routers import admin_router
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..schemas.user import (
@@ -7,14 +15,26 @@ from ..schemas.user import (
     UserSchema,
     UserSchemaUpdate,
     UserSchemaUpdateAdmin,
+    UserSchemaUpdateAvatar,
 )
 from ..schemas.post import PostSchemaBase
-from ..services.user import create, update, delete, get_all, get_by_username
+from ..schemas.image import ImageSchemaBase
+from ..services.user import (
+    create,
+    update,
+    delete,
+    get_all,
+    get_by_username,
+    update_avatar,
+)
 from ..services.role import get_by_name
+from ..services.image import create as create_img
+from ..services.image import delete as delete_img
 from ..config import settings
 from ..db import get_db
 from ..dependencies import Auth, auth_checker
 from ..redis import redis_conn
+from ..utils import clear_dir, hash_file_name
 
 
 users_router = APIRouter(prefix="/users", tags=["Users"])
@@ -156,3 +176,43 @@ async def get_user_posts(
         raise HTTPException(status_code=400, detail="User not found")
 
     return db_user.posts
+
+
+@users_router.post("/me/upload_avatar", response_model=ImageSchemaBase)
+async def create_upload_avatar(
+    authorize: Annotated[Auth, Depends(auth_checker)],
+    file: UploadFile,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    current_user = await authorize.get_current_user(db)
+    file_dir = f"{settings.STATIC_PATH}/user_avatars/{current_user.id}"
+    clear_dir(file_dir)
+
+    try:
+        filename = hash_file_name(file.filename)
+        file_ext = file.filename.split(".")[-1]
+        file_content = await file.read()
+        file_url = f"{settings.STATIC_PATH}/user_avatars/{current_user.id}/{filename}.{file_ext}"
+        file_location = os.path.join(file_dir, f"{filename}.{file_ext}")
+
+        os.makedirs(file_dir, exist_ok=True)
+
+        async with aiofiles.open(file_location, "wb+") as image_file:
+            file_data = {
+                "name": file.filename,
+                "size": file.size,
+                "location": file_url,
+            }
+            await image_file.write(file_content)
+            image_id = (await create_img(db, file_data)).id
+            update_user_schema = UserSchemaUpdateAvatar(avatar_id=image_id)
+            await update_avatar(db, update_user_schema, current_user)
+
+    except Exception:
+        await delete_img(db, file_data)
+        return {"detail": "Something went wrong"}
+
+    finally:
+        await file.close()
+
+    return file_data
