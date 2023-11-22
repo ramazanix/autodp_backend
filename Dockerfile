@@ -12,7 +12,6 @@ RUN pip install --no-cache-dir --upgrade -r /autodp/requirements.txt
 COPY ./src /autodp/src
 COPY ./alembic.ini /autodp/alembic.ini
 COPY ./alembic /autodp/alembic
-RUN mkdir ./static
 
 RUN chmod +x /autodp/alembic/apply_migrations.sh
 ENTRYPOINT ["/autodp/alembic/apply_migrations.sh"]
